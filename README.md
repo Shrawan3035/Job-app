@@ -34,7 +34,6 @@ This project consists of two main parts:
 
 ### Database Setup
 1. Ensure your PostgreSQL server is running.
-2. A `seed_users.sql` script is provided in the root directory. You can execute this script on your PostgreSQL database to seed initial data.
 
 ### Running the Backend
 1. Navigate to the backend directory:
