@@ -14,8 +14,10 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private int id;
     private String username;
     private String password;
+    private String role; // Stores "ADMIN" or "USER"
 
 }

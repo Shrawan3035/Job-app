@@ -7,9 +7,23 @@ import {
     Typography,
     Button,
   } from "@mui/material";
-  
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ isAuthenticated, setAuthStatus, isAdmin }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('auth');
+    // Clear axios auth headers
+    axios.defaults.auth = null;
+    // Update global state
+    setAuthStatus(false);
+    // Redirect to login
+    navigate('/login');
+  };
+
   return (
     <div>
       <Grid container spacing={2} sx={{ margin: "2%" }}>
@@ -20,15 +34,25 @@ const Navbar = () => {
                 Job Portal
               </Typography>
 
-              <Box sx={{ m: 0.5, mx: 'auto', width: 80 }}>
-                <Button variant="outlined" href='http://localhost:3000'>Home</Button>
-               </Box>
-              <Box sx={{ m: 0.5, mx: 'auto', width: 100 }}>
-                <Button variant="outlined" href='http://localhost:3000/create'>Add Job</Button>
-              </Box>
-              <Box sx={{ m: 0.5, mx: 'auto', width: 180 }}>
-                <Button variant="outlined" href='https://telusko.com/'>Contact Us</Button>
-               </Box>
+              {/* Show navigation buttons only if logged in */}
+              {isAuthenticated && (
+                <>
+                  <Box sx={{ m: 0.5, mx: 'auto', width: 80 }}>
+                    <Button variant="outlined" onClick={() => navigate('/')}>Home</Button>
+                  </Box>
+                  {isAdmin && (
+                    <Box sx={{ m: 0.5, mx: 'auto', width: 100 }}>
+                      <Button variant="outlined" onClick={() => navigate('/create')}>Add Job</Button>
+                    </Box>
+                  )}
+                  <Box sx={{ m: 0.5, mx: 'auto', width: 180 }}>
+                    <Button variant="outlined" href='https://telusko.com/'>Contact Us</Button>
+                  </Box>
+                  <Box sx={{ m: 0.5, mx: 'auto', width: 100 }}>
+                    <Button variant="contained" color="error" onClick={handleLogout}>Logout</Button>
+                  </Box>
+                </>
+              )}
         </Toolbar>
       </AppBar>
     </Box>

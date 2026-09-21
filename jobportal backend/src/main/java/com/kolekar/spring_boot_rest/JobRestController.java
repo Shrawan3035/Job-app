@@ -25,7 +25,7 @@ public class JobRestController {
        return service.getJob(postId);
     }
 
-    @PostMapping(path = "jobPost", produces = {"applicatiopn/json"})
+    @PostMapping(path = "jobPost", produces = {"application/json"})
     public JobPost addJob(@RequestBody JobPost jobPost){
         service.addJobPost(jobPost);
         return jobPost;

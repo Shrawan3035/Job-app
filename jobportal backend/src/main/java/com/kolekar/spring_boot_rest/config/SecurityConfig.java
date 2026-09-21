@@ -8,19 +8,17 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -29,80 +27,45 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
-
     @Bean
     public AuthenticationProvider authProvider() {
-        DaoAuthenticationProvider provider=new DaoAuthenticationProvider(userDetailsService);
-//        PasswordEncoder passwordEncoder = passwordEncoder();
-//        provider.setPasswordEncoder(passwordEncoder); // Default BCrypt PasswordEncoder
-        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return NoOpPasswordEncoder.getInstance();
-//    }
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-//     Customizer<CsrfConfigurer<HttpSecurity>> custCsrf = new Customizer<CsrfConfigurer<HttpSecurity>> (){
-//
-//         @Override
-//        public void customize(CsrfConfigurer<HttpSecurity> configurer){
-//            configurer.disable();
-//      }
-//        };
-//        http.csrf(custCsrf);
-//
-//         Customizer<AuthorizeHttpRequestsConfigurer<HttpSecurity>.
-//		  AuthorizationManagerRequestMatcherRegistry> custHttp = new Customizer<AuthorizeHttpRequestsConfigurer<HttpSecurity>.
-//		  AuthorizationManagerRequestMatcherRegistry>() {
-//
-//		  @Override
-//          public void customize(AuthorizeHttpRequestsConfigurer<HttpSecurity>.
-//		  AuthorizationManagerRequestMatcherRegistry registry) {
-//		  registry.anyRequest().authenticated();
-//
-//		  } };
-//
-//		  http.authorizeHttpRequests(custHttp); http.csrf(custCsrf);
-// OR
-//        http.csrf(customizer -> customizer.disable());
-//        http.authorizeHttpRequests(requests -> requests.anyRequest().authenticated());
-//        http.httpBasic(Customizer.withDefaults());
-//        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-// OR
         http
+                .cors(Customizer.withDefaults())
                 .csrf(customizer -> customizer.disable())
-                .authorizeHttpRequests(requests -> requests.anyRequest().authenticated())
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/register").permitAll() // Allow registration
+                        .requestMatchers(HttpMethod.POST, "/jobPost").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/jobPost").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/jobPost/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//
-//        UserDetails user = User
-//                .withDefaultPasswordEncoder()
-//                .username("siddhi")
-//                .password("1234")
-//                .roles("USER")
-//                .build();
-//
-//        UserDetails admin = User
-//                .withDefaultPasswordEncoder()
-//                .username("shrawan")
-//                .password("3035")
-//                .roles("ADMIN")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user, admin);
-//    }
-
-
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3000/"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
